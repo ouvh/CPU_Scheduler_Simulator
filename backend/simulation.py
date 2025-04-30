@@ -22,7 +22,6 @@ class CPUSimulation:
         self.running = False
 
     def step(self):
-        self.scheduler.current_time += 1
         current_time = self.scheduler.current_time
 
         # Update blocked processes
@@ -39,6 +38,8 @@ class CPUSimulation:
         if not self.current_process:
             self.current_process = self.scheduler.next_process()
 
+
+        flag = 0
         # Execute current process
         if self.current_process:
             result = self.current_process.execute_step(current_time)
@@ -48,7 +49,8 @@ class CPUSimulation:
                 self.current_process = None
             elif result == "TERMINATED":
                 self._record_metrics()
-                self.current_process = None
+                flag = 1
+               
             else:
                 if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
                     self.scheduler.current_quantum += 1
@@ -57,9 +59,14 @@ class CPUSimulation:
         self.history.append({
             "time": current_time,
             "running": self.current_process.pid if self.current_process else None,
-            "ready": [p.pid for p in self.scheduler.ready_queue],
+            "ready": [p.pid for p in self.scheduler.ready_queue if p != self.current_process],
             "blocked": [p.pid for p in self.blocked]
         })
+       
+
+        self.scheduler.current_time += 1
+        return flag
+
 
     def _record_metrics(self):
         p = self.current_process

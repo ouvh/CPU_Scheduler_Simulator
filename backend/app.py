@@ -38,16 +38,18 @@ def background_simulation(scheduler_type, time_quantum):
         running = True
 
         while running and simulation.scheduler.processes or simulation.scheduler.ready_queue or simulation.blocked:
-            simulation.step()
+            flag = simulation.step()
             
             # Emit update
             socketio.emit('update', {
-                "time": simulation.scheduler.current_time,
+                "time": simulation.scheduler.current_time - 1,
                 "running": simulation.current_process.pid if simulation.current_process else None,
-                "ready": [p.pid for p in simulation.scheduler.ready_queue],
+                "ready": [p.pid for p in simulation.scheduler.ready_queue if p != simulation.current_process],
                 "blocked": [p.pid for p in simulation.blocked],
                 "metrics": simulation.calculate_final_metrics()
             })
+            if flag:
+                simulation.current_process = None
             
             time.sleep(0.5)  # Slow down simulation
 

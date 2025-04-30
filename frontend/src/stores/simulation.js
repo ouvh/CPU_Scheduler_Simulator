@@ -36,14 +36,29 @@ export const useSimulationStore = defineStore('simulation', {
         total_io_blocks: payload.metrics?.total_io_blocks || 0
       }
       
-      // Save history for Gantt chart
+      // Save history for Gantt chart and timeline
       if (payload.time !== undefined) {
-        this.history.push({
+        // Check if we already have an entry for this time
+        const existingIndex = this.history.findIndex(h => h.time === payload.time)
+        
+        // New timeline entry
+        const timelineEntry = {
           time: payload.time,
           running: payload.running,
-          ready: [...payload.ready] || [],
-          blocked: [...payload.blocked] || []
-        })
+          ready: [...(payload.ready || [])],
+          blocked: [...(payload.blocked || [])]
+        }
+        
+        if (existingIndex !== -1) {
+          // Update existing entry
+          this.history[existingIndex] = timelineEntry
+        } else {
+          // Add new entry
+          this.history.push(timelineEntry)
+          
+          // Sort history by time
+          this.history.sort((a, b) => a.time - b.time)
+        }
       }
     },
     addProcess(process) {
@@ -57,6 +72,23 @@ export const useSimulationStore = defineStore('simulation', {
     },
     clearProcesses() {
       this.processes = []
+    },
+    $reset() {
+      this.processes = []
+      this.history = []
+      this.metrics = {
+        currentTime: 0,
+        currentProcess: null,
+        readyQueue: [],
+        blocked: [],
+        avg_turnaround: 0,
+        avg_waiting: 0,
+        cpu_utilization: 0,
+        total_time: 0,
+        throughput: 0,
+        total_io_blocks: 0
+      }
+      this.isRunning = false
     }
   }
 })
