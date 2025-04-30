@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import io from 'socket.io-client'
 import App from './App.vue'
-import './assets/main.css'
 
 // Import Tailwind CSS
 import './assets/css/main.css'
