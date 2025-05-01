@@ -72,11 +72,22 @@
         <p class="text-sm text-blue-700">Avg Waiting Time: {{ (store.finalMetrics.avg_waiting).toFixed(2) }}</p>
       </div>
     </div>
+
+    <div class="mt-4 border-t pt-4">
+  <h3 class="text-lg font-medium mb-2">Analysis</h3>
+  <button 
+    @click="compareAllAlgorithms" 
+    :disabled="disabled || store.isRunning || store.processes.length === 0"
+    class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:bg-purple-300"
+  >
+    Compare All Algorithms
+  </button>
+</div>
   </div>
 </template>
   
 <script setup>
-import { ref, inject, defineProps } from 'vue'
+import { ref, inject, defineProps ,nextTick} from 'vue'
 import { useSimulationStore } from '@/stores/simulation'
 
 const props = defineProps({
@@ -159,4 +170,13 @@ const loadProcessesForm = () => {
   }
   input.click()
 }
+
+const emit = defineEmits(['openComparison'])
+
+const compareAllAlgorithms = () => {
+  // Signal to parent that we want to open the comparison
+  emit('openComparison')
+}
+
+
 </script>

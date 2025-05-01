@@ -80,7 +80,7 @@ class RoundRobinScheduler(Scheduler):
 
             self.current_quantum = 0
        
-        return self.queue.queue[0][2] if self.queue else None
+        return self.queue.queue[0][2] if not self.queue.empty() else None
     
     def remove_from_queue(self):
         self.queue.get()

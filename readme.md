@@ -40,6 +40,10 @@ This project simulates how a CPU scheduler manages processes in an operating sys
 - Adjust time quantum for round robin algorithms
 - Save final performance metrics for comparison
 
+### Visual Reports: 
+- Generate charts and graphs visualizing performance differences
+
+
 ## 🛠️ Technologies Used
 
 ### Backend

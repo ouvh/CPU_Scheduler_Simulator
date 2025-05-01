@@ -1,12 +1,14 @@
 <!-- filepath: c:\Users\OussamaLaaroussi\Desktop\CS__s6\OS\OS_scheduler\frontend\src\App.vue -->
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject,nextTick } from 'vue'
 import { useSimulationStore } from '@/stores/simulation'
 import ProcessForm from '@/components/ProcessForm.vue'
 import ProcessList from '@/components/ProcessList.vue'
 import SimulationControls from '@/components/SimulationControls.vue'
 import MetricsDisplay from '@/components/MetricsDisplay.vue'
 import GanttChart from '@/components/GanttChart.vue'
+import ComparisonReport from '@/components/ComparisonReport.vue'
+
 
 const socket = inject('socket')
 const store = useSimulationStore()
@@ -72,6 +74,22 @@ onMounted(() => {
     }, 5000)
   })
 })
+
+const showComparisonReport = ref(false)
+const comparisonReport = ref(null)
+
+// Handler for the openComparison event
+const handleOpenComparison = () => {
+  showComparisonReport.value = true
+  
+  // Wait for the modal to be rendered and then call runComparison
+  nextTick(() => {
+    if (comparisonReport.value) {
+      comparisonReport.value.runComparison()
+    }
+  })
+}
+
 </script>
 
 <template>
@@ -91,7 +109,7 @@ onMounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 space-y-6">
           <ProcessForm :disabled="store.isRunning" />
-          <SimulationControls :disabled="store.processes.length === 0" />
+          <SimulationControls @openComparison="handleOpenComparison"  :disabled="store.processes.length === 0" />
           <ProcessList />
         </div>
         
@@ -100,6 +118,27 @@ onMounted(() => {
           <GanttChart />
         </div>
       </div>
+
+
+      <div v-if="showComparisonReport" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-5xl max-h-[90vh] overflow-y-auto">
+    <div class="p-4 border-b flex justify-between items-center">
+      <h2 class="text-xl font-bold">Scheduler Algorithm Comparison</h2>
+      <button @click="showComparisonReport = false" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6">
+      <ComparisonReport ref="comparisonReport" />
+    </div>
+  </div>
+</div>
+
+
+
+
     </div>
   </div>
 </template>

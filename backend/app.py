@@ -149,5 +149,77 @@ def handle_remove_process(data):
         emit('error', {'message': str(e)})
 
 
+@socketio.on('compare_schedulers')
+def handle_compare_schedulers():
+    print("starting the comparaison")
+    global processes
+    
+    if not processes:
+        emit('error', {'message': 'No processes to simulate'})
+        return
+    
+    # Save original process list to restore later
+    original_processes = processes.copy()
+    comparison_results = {}
+    
+    scheduler_configs = [
+        {'name': 'First Come First Served (FCFS)', 'type': 'fcfs', 'quantum': None},
+        {'name': 'Shortest Job First (SJF)', 'type': 'sjf', 'quantum': None},
+        {'name': 'Priority', 'type': 'priority', 'quantum': None},
+        {'name': 'Round Robin', 'type': 'rr', 'quantum': 4},
+        {'name': 'Priority Round Robin', 'type': 'priority_rr', 'quantum': 4}
+    ]
+    
+    # Run each scheduler algorithm
+    for config in scheduler_configs:
+        print("running")
+        # Reset processes for each run
+        process_copy = [Process(p.pid, p.arrival_time, p.burst_time, 
+                               p.priority, p.io_chance) for p in original_processes]
+        for process in process_copy:
+            process.reset()
+        # Create the appropriate scheduler
+        if config['type'] == 'fcfs':
+            scheduler = FCFSScheduler(process_copy)
+        elif config['type'] == 'sjf':
+            scheduler = SJFScheduler(process_copy)
+        elif config['type'] == 'priority':
+            scheduler = PriorityScheduler(process_copy)
+        elif config['type'] == 'rr':
+            scheduler = RoundRobinScheduler(process_copy, config['quantum'])
+        elif config['type'] == 'priority_rr':
+            scheduler = PriorityRRScheduler(process_copy, config['quantum'])
+        
+        # Run simulation
+        simulation = CPUSimulation(scheduler)
+        
+        # Run until completion
+        running = True
+        # made a change here to fix a bug 
+        while running and (simulation.scheduler.processes or simulation.current_process or simulation.scheduler.ready_queue or simulation.blocked or (not simulation.scheduler.queue.empty() if  isinstance(simulation.scheduler, (RoundRobinScheduler, PriorityRRScheduler)) else False)):
+            print(running)
+            flag = simulation.step()
+            if flag:
+                simulation.current_process = None
+            
+            #time.sleep(0.5)  # Slow down simulation
+        
+        # Get final metrics
+        metrics = simulation.calculate_final_metrics()
+        
+        # Store results
+        comparison_results[config['name']] = {
+            'metrics': metrics,
+            'history_length': len(simulation.history)
+        }
+        print("stoping")
+
+    
+    # Restore original processes
+    processes = original_processes
+    
+    # Send results to client
+    emit('comparison_results', comparison_results)
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

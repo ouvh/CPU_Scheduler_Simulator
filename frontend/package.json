@@ -16,7 +16,9 @@
     "postcss": "^8.5.3",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.4",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+     "chart.js": "^3.9.1",
+    "html2pdf.js": "^0.10.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",

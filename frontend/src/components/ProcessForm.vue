@@ -38,7 +38,7 @@
             v-model.number="newProcess.io" 
             type="number" 
             min="0" 
-            max="100" 
+            max="99" 
             :disabled="disabled"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
         </div>
