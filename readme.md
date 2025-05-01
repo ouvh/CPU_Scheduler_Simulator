@@ -1,9 +1,7 @@
 # CPU Scheduler Simulator
 
 A comprehensive, interactive CPU scheduler simulation tool that demonstrates the behavior and performance of various CPU scheduling algorithms in operating systems. This application provides real-time visualization of process execution, queue management, and performance metrics.
-
-![CPU Scheduler Simulator](https://placeholder-for-screenshot.png)
-
+![CPU Scheduler Simulator](image.png)
 ## 🔍 Project Overview
 
 This project simulates how a CPU scheduler manages processes in an operating system. It demonstrates different scheduling algorithms and provides visual feedback on their performance characteristics. The simulator helps students and professionals understand the trade-offs between different scheduling approaches.
@@ -137,6 +135,7 @@ CPU_Scheduler/
     ├── src/
     │   ├── assets/             # CSS and other assets
     │   ├── components/         # Vue components
+    |   |   ├── ComparisonReport.vue # comparaison dashboard 
     │   │   ├── GanttChart.vue  # Timeline visualization
     │   │   ├── MetricsDisplay.vue # Performance metrics display
     │   │   ├── ProcessForm.vue # Process creation interface
