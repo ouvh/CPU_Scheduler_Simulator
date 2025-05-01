@@ -26,10 +26,14 @@ class CPUSimulation:
 
         # Update blocked processes
         for p in self.blocked[:]:
-            if random.random() < 0.3:  # 30% chance to unblock
+            if random.random() < 0.3:  # 30% chance to unblock , if Io block is stuck more often , change the value of 0.7  
                 p.state = "READY"
-                self.scheduler.ready_queue.append(p)
-                self.blocked.remove(p)
+                if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
+                    self.scheduler.add(p)
+                    self.blocked.remove(p)
+                else:
+                    self.scheduler.ready_queue.append(p)
+                    self.blocked.remove(p)
 
         # Update wait times for ready processes
         self.scheduler.update_wait_times()
@@ -45,25 +49,43 @@ class CPUSimulation:
             result = self.current_process.execute_step(current_time)
             
             if result == "BLOCKED":
+                #pop the element from the queue
+                if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
+                    self.scheduler.remove_from_queue()
                 self.blocked.append(self.current_process)
                 self.current_process = None
             elif result == "TERMINATED":
+                #pop the element from the queue
+                if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
+                    self.scheduler.remove_from_queue()
+                    
                 self._record_metrics()
                 flag = 1
                
             else:
                 if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
                     self.scheduler.current_quantum += 1
+                    flag = 1
+
 
         # Record history for visualization
-        self.history.append({
-            "time": current_time,
-            "running": self.current_process.pid if self.current_process else None,
-            "ready": [p.pid for p in self.scheduler.ready_queue if p != self.current_process],
-            "blocked": [p.pid for p in self.blocked]
-        })
-       
+        if isinstance(self.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
+             self.history.append({
+                "time": current_time,
+                "running": self.current_process.pid if self.current_process else None,
+                "ready": [p.pid for temp,temp2,p in self.scheduler.queue.queue if p != self.current_process],
+                "blocked": [p.pid for p in self.blocked]
+            })
 
+        else :
+
+            self.history.append({
+                "time": current_time,
+                "running": self.current_process.pid if self.current_process else None,
+                "ready": [p.pid for p in self.scheduler.ready_queue if p != self.current_process],
+                "blocked": [p.pid for p in self.blocked]
+            })
+       
         self.scheduler.current_time += 1
         return flag
 

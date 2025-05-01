@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import deque
+from queue import PriorityQueue
 
 class Scheduler(ABC):
     def __init__(self, processes):
@@ -55,33 +56,55 @@ class RoundRobinScheduler(Scheduler):
     def __init__(self, processes, time_quantum=4):
         super().__init__(processes)
         self.time_quantum = time_quantum
-        self.queue = deque()
+        self.queue = PriorityQueue()
         self.current_quantum = 0
+        self.counter = 0
 
     def next_process(self):
         # Add newly arrived processes
         while self.processes and self.processes[0].arrival_time <= self.current_time:
             p = self.processes.pop(0)
             p.state = "READY"
-            self.queue.append(p)
+            self.queue.put((1,self.counter,p))
+            self.counter += 1
+           
         
-        if self.current_quantum >= self.time_quantum or not self.queue:
-            if self.queue and self.queue[0].state != "TERMINATED":
-                self.queue.rotate(-1)  # Move current to end
-            self.current_quantum = 0
-        
-        return self.queue[0] if self.queue else None
 
-class PriorityRRScheduler(PriorityScheduler):
+
+        if self.current_quantum >= self.time_quantum or not self.queue:
+            if self.queue:
+                # Move current to end
+                current = self.queue.get()
+                self.queue.put((current[0],self.counter,current[2]))
+                self.counter += 1
+
+            self.current_quantum = 0
+       
+        return self.queue.queue[0][2] if self.queue else None
+    
+    def remove_from_queue(self):
+        self.queue.get()
+    
+    def add(self,p):
+        self.queue.put((1,self.counter,p))
+        self.counter += 1
+
+
+class PriorityRRScheduler(RoundRobinScheduler):
     def __init__(self, processes, time_quantum=4):
-        super().__init__(processes)
-        self.time_quantum = time_quantum
-        self.current_quantum = 0
+        super().__init__(processes,time_quantum)
+    
 
     def next_process(self):
-        if self.current_quantum >= self.time_quantum or not self.ready_queue:
-            self.current_quantum = 0
-            # Re-sort the queue
-            self.ready_queue.sort(key=lambda p: (-p.priority, p.arrival_time))
-        
+        # Add newly arrived processes
+        while self.processes and self.processes[0].arrival_time <= self.current_time:
+            p = self.processes.pop(0)
+            p.state = "READY"
+            self.queue.put((-1 * p.priority,self.counter,p))
+            self.counter += 1
+
         return super().next_process()
+
+    def add(self,p):
+        self.queue.put((-1 * p.priority,self.counter,p))
+        self.counter += 1

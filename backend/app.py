@@ -37,18 +37,29 @@ def background_simulation(scheduler_type, time_quantum):
         simulation = CPUSimulation(scheduler)
         running = True
         # made a change here to fix a bug 
-        while running and (simulation.scheduler.processes or simulation.current_process or simulation.scheduler.ready_queue or simulation.blocked):
+        while running and (simulation.scheduler.processes or simulation.current_process or simulation.scheduler.ready_queue or simulation.blocked or (not simulation.scheduler.queue.empty() if  isinstance(simulation.scheduler, (RoundRobinScheduler, PriorityRRScheduler)) else False)):
             print(running)
             flag = simulation.step()
             
             # Emit update
-            socketio.emit('update', {
-                "time": simulation.scheduler.current_time - 1,
-                "running": simulation.current_process.pid if simulation.current_process else None,
-                "ready": [p.pid for p in simulation.scheduler.ready_queue if p != simulation.current_process],
-                "blocked": [p.pid for p in simulation.blocked],
-                "metrics": simulation.calculate_final_metrics()
-            })
+            if isinstance(simulation.scheduler, (RoundRobinScheduler, PriorityRRScheduler)):
+                socketio.emit('update', {
+                    "time": simulation.scheduler.current_time - 1,
+                    "running": simulation.current_process.pid if simulation.current_process else None,
+                    "ready": [p.pid for temp,temp1,p in simulation.scheduler.queue.queue if p != simulation.current_process],
+                    "blocked": [p.pid for p in simulation.blocked],
+                    "metrics": simulation.calculate_final_metrics()
+                })
+
+            else:
+
+                socketio.emit('update', {
+                    "time": simulation.scheduler.current_time - 1,
+                    "running": simulation.current_process.pid if simulation.current_process else None,
+                    "ready": [p.pid for p in simulation.scheduler.ready_queue if p != simulation.current_process],
+                    "blocked": [p.pid for p in simulation.blocked],
+                    "metrics": simulation.calculate_final_metrics()
+                })
             if flag:
                 simulation.current_process = None
             
