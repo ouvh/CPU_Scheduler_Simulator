@@ -43,7 +43,8 @@ onMounted(() => {
     store.isRunning = false
     store.updateMetrics(data)
     // Save the final metrics
-    store.saveFinalMetrics(data.metrics)
+    // i have made a change here to fix a bug
+    store.saveFinalMetrics(data)
   })
   
   // Reset confirmation

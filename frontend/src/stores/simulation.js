@@ -98,6 +98,7 @@ export const useSimulationStore = defineStore('simulation', {
         throughput: 0,
         total_io_blocks: 0
       }
+      console.log(this.processes)
       // Keep the finalMetrics intact for reference
     },
     

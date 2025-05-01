@@ -36,8 +36,9 @@ def background_simulation(scheduler_type, time_quantum):
 
         simulation = CPUSimulation(scheduler)
         running = True
-
-        while running and simulation.scheduler.processes or simulation.scheduler.ready_queue or simulation.blocked:
+        # made a change here to fix a bug 
+        while running and (simulation.scheduler.processes or simulation.current_process or simulation.scheduler.ready_queue or simulation.blocked):
+            print(running)
             flag = simulation.step()
             
             # Emit update
@@ -53,6 +54,8 @@ def background_simulation(scheduler_type, time_quantum):
             
             time.sleep(0.5)  # Slow down simulation
 
+
+        print("the simulation is done")
         # Final metrics
         if running:
             socketio.emit('complete', simulation.calculate_final_metrics())
@@ -94,9 +97,13 @@ def handle_start(data):
 
 @socketio.on('reset')
 def handle_reset():
+    
     global processes, running
+    for process in processes:
+        process.reset()
     #processes = []
     running = False
+    print("reset done")
     emit('reset_done')
 
 @socketio.on('load_file')
@@ -118,12 +125,16 @@ def handle_remove_process(data):
         for i, process in enumerate(processes):
             if process.pid == pid:
                 processes.pop(i)
+                print("process removed")
                 emit('process_removed', {'pid': pid})
                 return
-        
+        print("process not found")
+
         # Process not found
         emit('error', {'message': f'Process with PID {pid} not found'})
     except Exception as e:
+        print("something went wrong")
+
         emit('error', {'message': str(e)})
 
 

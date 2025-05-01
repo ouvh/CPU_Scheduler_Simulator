@@ -41,6 +41,7 @@ class Process:
             self.state = "TERMINATED"
             return "TERMINATED"
         
+        print(self.remaining_time)
         return "RUNNING"
 
     def reset(self):

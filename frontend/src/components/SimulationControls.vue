@@ -104,8 +104,11 @@ const resetSimulation = () => {
     socket.emit('reset')
   } else {
     // If simulation is not running, just reset the UI
+    socket.emit('reset')
     store.reset()
   }
+
+  // fixing bug here
 }
 
 const saveProcesses = () => {
