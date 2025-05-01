@@ -1,3 +1,78 @@
+<!-- filepath: c:\Users\OussamaLaaroussi\Desktop\CS__s6\OS\OS_scheduler\frontend\src\App.vue -->
+<script setup>
+import { ref, onMounted, inject } from 'vue'
+import { useSimulationStore } from '@/stores/simulation'
+import ProcessForm from '@/components/ProcessForm.vue'
+import ProcessList from '@/components/ProcessList.vue'
+import SimulationControls from '@/components/SimulationControls.vue'
+import MetricsDisplay from '@/components/MetricsDisplay.vue'
+import GanttChart from '@/components/GanttChart.vue'
+
+const socket = inject('socket')
+const store = useSimulationStore()
+const error = ref('')
+
+onMounted(() => {
+  // Initial status
+  socket.on('status', (data) => {
+    console.log('Received status:', data)
+    store.isRunning = data.running
+  })
+  
+  // Process added
+  socket.on('process_added', (process) => {
+    console.log('Process added:', process)
+    store.addProcess(process)
+  })
+  
+  // Process removed
+  socket.on('process_removed', (data) => {
+    console.log('Process removed:', data)
+    store.removeProcess(data.pid)
+  })
+  
+  // Simulation updates
+  socket.on('update', (data) => {
+    console.log('Simulation update:', data)
+    store.updateMetrics(data)
+  })
+  
+  // Simulation completed
+  socket.on('complete', (data) => {
+    console.log('Simulation complete:', data)
+    store.isRunning = false
+    store.updateMetrics(data)
+    // Save the final metrics
+    store.saveFinalMetrics(data.metrics)
+  })
+  
+  // Reset confirmation
+  socket.on('reset_done', () => {
+    console.log('Reset completed')
+    store.reset()
+  })
+  
+  // Clear all data (processes + simulation)
+  socket.on('clear_all', () => {
+    console.log('All data cleared')
+    store.fullReset()
+  })
+  
+  // Error handling
+  socket.on('error', (data) => {
+    console.error('Error:', data.message)
+    error.value = data.message
+    
+    // Auto-hide error after 5 seconds
+    setTimeout(() => {
+      if (error.value === data.message) {
+        error.value = ''
+      }
+    }, 5000)
+  })
+})
+</script>
+
 <template>
   <div class="min-h-screen bg-gray-100 p-8">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -27,68 +102,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, onMounted, inject } from 'vue'
-import ProcessForm from '@/components/ProcessForm.vue'
-import SimulationControls from '@/components/SimulationControls.vue'
-import MetricsDisplay from '@/components/MetricsDisplay.vue'
-import GanttChart from '@/components/GanttChart.vue'
-import ProcessList from '@/components/ProcessList.vue'
-import { useSimulationStore } from '@/stores/simulation'
-
-const socket = inject('socket')
-const store = useSimulationStore()
-const error = ref('')
-
-onMounted(() => {
-  // Initial status
-  socket.on('status', (data) => {
-    console.log('Received status:', data)
-    store.isRunning = data.running
-  })
-  
-  // Process added
-  socket.on('process_added', (process) => {
-    console.log('Process added:', process)
-    store.addProcess(process)
-  })
-  
-  // Simulation updates
-  socket.on('update', (data) => {
-    console.log('Simulation update:', data)
-    store.updateMetrics(data)
-  })
-  
-  // Simulation completed
-  socket.on('complete', (data) => {
-    console.log('Simulation complete:', data)
-    store.isRunning = false
-    store.updateMetrics(data)
-  })
-  
-  // Reset confirmation
-  socket.on('reset_done', () => {
-    console.log('Reset completed')
-    store.$reset()
-  })
-  
-  // Error handling
-  socket.on('error', (data) => {
-    console.error('Error:', data.message)
-    error.value = data.message
-  })
-
-  // File loaded
-  socket.on('file_loaded', (data) => {
-    console.log('File loaded with', data.count, 'processes')
-  })
-  
-  // Simulation started
-  socket.on('started', (data) => {
-    console.log('Simulation started with', data.scheduler, 'scheduler')
-    store.isRunning = true
-    store.schedulerType = data.scheduler
-  })
-})
-</script>

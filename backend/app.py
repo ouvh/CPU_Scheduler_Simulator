@@ -95,7 +95,7 @@ def handle_start(data):
 @socketio.on('reset')
 def handle_reset():
     global processes, running
-    processes = []
+    #processes = []
     running = False
     emit('reset_done')
 
@@ -107,6 +107,25 @@ def handle_load_file(data):
         emit('file_loaded', {'count': len(processes)})
     except Exception as e:
         emit('error', {'message': str(e)})
+
+
+@socketio.on('remove_process')
+def handle_remove_process(data):
+    try:
+        pid = int(data['pid'])
+        # Find and remove the process
+        global processes
+        for i, process in enumerate(processes):
+            if process.pid == pid:
+                processes.pop(i)
+                emit('process_removed', {'pid': pid})
+                return
+        
+        # Process not found
+        emit('error', {'message': f'Process with PID {pid} not found'})
+    except Exception as e:
+        emit('error', {'message': str(e)})
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

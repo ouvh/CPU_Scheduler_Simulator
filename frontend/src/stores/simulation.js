@@ -18,7 +18,8 @@ export const useSimulationStore = defineStore('simulation', {
     isRunning: false,
     schedulerType: 'fcfs',
     timeQuantum: 4,
-    history: []
+    history: [],
+    finalMetrics: null // To store final metrics separately
   }),
   actions: {
     updateMetrics(payload) {
@@ -61,20 +62,29 @@ export const useSimulationStore = defineStore('simulation', {
         }
       }
     },
+    
+    saveFinalMetrics(metrics) {
+      // Store the final metrics separately so they don't get lost
+      this.finalMetrics = { ...metrics }
+    },
+    
     addProcess(process) {
       this.processes.push(process)
     },
+    
     removeProcess(pid) {
       const index = this.processes.findIndex(p => p.pid === pid)
       if (index !== -1) {
         this.processes.splice(index, 1)
       }
     },
+    
     clearProcesses() {
       this.processes = []
     },
-    $reset() {
-      this.processes = []
+    
+    reset() {
+      this.isRunning = false
       this.history = []
       this.metrics = {
         currentTime: 0,
@@ -88,7 +98,14 @@ export const useSimulationStore = defineStore('simulation', {
         throughput: 0,
         total_io_blocks: 0
       }
-      this.isRunning = false
+      // Keep the finalMetrics intact for reference
+    },
+    
+    // Complete reset, including processes and final metrics
+    fullReset() {
+      this.reset()
+      this.processes = []
+      this.finalMetrics = null
     }
   }
 })
